@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ML & Mental Health: Social Media Balance</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 40px auto;
+            padding: 20px;
+            background-color: #fff;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 12px;
+        }
+        h1 {
+            text-align: center;
+            color: #4CAF50;
+            margin-bottom: 5px;
+        }
+        h2 {
+            border-bottom: 2px solid #eee;
+            padding-bottom: 10px;
+            color: #555;
+            margin-top: 30px;
+        }
+        .predictor-section {
+            display: flex;
+            gap: 30px;
+            padding: 20px 0;
+            flex-wrap: wrap;
+        }
+        .input-form, .output-display {
+            flex: 1;
+            min-width: 300px;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            background-color: #f9f9f9;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #333;
+        }
+        input[type="number"], button {
+            width: 100%;
+            padding: 10px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            box-sizing: border-box;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        #result {
+            font-size: 2em;
+            text-align: center;
+            margin-top: 20px;
+            color: #4CAF50;
+            font-weight: bold;
+        }
+        .visualization-section img {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        .equation {
+            background: #e6ffe6;
+            padding: 15px;
+            border-left: 5px solid #4CAF50;
+            margin-bottom: 20px;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>ML in Action: The Social Media & Mental Health Balance</h1>
+        <p style="text-align: center; font-size: 1.1em; color: #666;">
+            Discover how daily habits influence your predicted happiness index (based on real-world data).
+        </p>
+
+        <h2> Estimate Your Happiness</h2>
+        <div class="equation">
+            The prediction is based on a **Random Forest Regression Model** trained on the provided dataset.
+        </div>
+        
+        <div class="predictor-section">
+            <div class="input-form">
+                <h3>Your Inputs</h3>
+                <label for="f1">Daily_Screen_Time (hrs)</label>
+                <input type="number" id="f1" value="4" min="0" max="15" step="0.1">
+
+                <label for="f2">Sleep_Quality (1-10)</label>
+                <input type="number" id="f2" value="3" min="0" max="7">
+                
+                <label for="f3">Stress_Level (1-30)</label>
+                <input type="number" id="f3" value="4" min="0" max="30">
+                
+                <button onclick="predictHappiness()">Predict Happiness</button>
+            </div>
+            
+            <div class="output-display">
+                <h3>Predicted Happiness Index (1-10)</h3>
+                <div id="result">---</div>
+                <p style="margin-top: 10px; font-size: 0.9em; color: #777;">
+                    Higher scores suggest greater alignment with positive mental health outcomes observed in the dataset.
+                </p>
+            </div>
+        </div>
+       
+    </div>
+
+<script>
+async function predictHappiness() {
+    const f1 = parseFloat(document.getElementById('f1').value) || 0;
+    const f2 = parseFloat(document.getElementById('f2').value) || 0;
+    const f3 = parseFloat(document.getElementById('f3').value) || 0;
+
+    // ✅ Send input as { features: [...] } to match FastAPI Pydantic model
+    const payload = { features: [f1, f2, f3] };
+
+    try {
+        const response = await fetch("http://127.0.0.1:8000/predict", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
+
+        if (!response.ok) throw new Error("Network response was not OK");
+
+        const data = await response.json();
+        const finalPrediction = data.prediction.toFixed(2);
+
+        document.getElementById('result').innerText = finalPrediction;
+
+        let feedback = '';
+        if (finalPrediction >= 8) {
+            feedback = ' Excellent balance! Keep it up!';
+        } else if (finalPrediction >= 5) {
+            feedback = ' Room for improvement in your routine.';
+        } else {
+            feedback = ' Consider taking a digital break to improve well-being.';
+        }
+
+        let feedbackDiv = document.getElementById('feedback');
+        if (!feedbackDiv) {
+            feedbackDiv = document.createElement('div');
+            feedbackDiv.id = 'feedback';
+            feedbackDiv.style.marginTop = '10px';
+            feedbackDiv.style.fontSize = '1.1em';
+            feedbackDiv.style.color = '#555';
+            document.querySelector('.output-display').appendChild(feedbackDiv);
+        }
+        feedbackDiv.innerText = feedback;
+
+    } catch (error) {
+        console.error("Error fetching prediction:", error);
+        document.getElementById('result').innerText = "Error fetching prediction";
+    }
+}
+
+// Optional: run prediction on page load with default values
+document.addEventListener('DOMContentLoaded', predictHappiness);
+</script>
+
+</body>
+</html>
